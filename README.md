@@ -1,4 +1,4 @@
-# 🦊 Vulpimancer v1.0.0
+# Vulpimancer v1.0.0
 
 > Production-grade Async Reconnaissance Engine — Authorised Security Assessments Only
 
