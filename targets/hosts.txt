@@ -1,0 +1,6 @@
+# Vulpimancer v1 target list
+# Add one host or IP per line. Lines starting with # are ignored.
+# Examples:
+#   example.com
+#   192.168.1.1
+#   sub.example.com:8080
