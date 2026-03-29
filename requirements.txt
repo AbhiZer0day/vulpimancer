@@ -1,0 +1,14 @@
+# Vulpimancer v1.0.0 — Dependencies
+# pip install -r requirements.txt
+
+# Async HTTP + DB
+aiohttp>=3.9.0
+aiosqlite>=0.20.0
+aiodns>=3.1.1
+
+# Robust HTTP engine (MOD-1)
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Rich CLI output (MOD-1 feedback)
+rich>=13.0.0

@@ -1,0 +1,9 @@
+*.db
+*.html
+*.json
+logs/*.log
+reports/*
+__pycache__/
+*.pyc
+.env
+netra_recon_*.txt
