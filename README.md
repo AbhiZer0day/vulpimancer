@@ -1,120 +1,199 @@
-# Vulpimancer v1.0.0
+# Vulpimancer
 
-> Production-grade Async Reconnaissance Engine — Authorised Security Assessments Only
+Vulpimancer is a security reconnaissance tool that automates the most time-consuming parts of an initial assessment. Instead of running five different tools separately and combining the results yourself, Vulpimancer does it in a single command.
 
-**Author:** Abhishek Zalavadiya
+It handles subdomain discovery, port scanning, TLS inspection, technology fingerprinting, sensitive path detection, and CVE lookup — all in one run. It is built on Python's async engine, so it handles large scopes without slowing down.
 
-> ⚠️ **Disclaimer:** This tool is intended for legal and ethical security testing purposes only. The developer is not responsible for any unauthorized or illegal usage.
-
-⚠️ **AUTHORISED USE ONLY** — Only run against systems you own or have explicit written permission to test.
+> ⚠️ **For authorised use only.** Only run this tool against systems you own or have written permission to test. Unauthorised scanning is illegal in most countries. The author, Abhishek Zalavadiya, is not responsible for any misuse.
 
 ---
 
-## What's New in v1.0.0
+## 🔍 What Vulpimancer Does
 
-| Module | Feature | Detail |
-|--------|---------|--------|
-| **MOD-1** | Robust HTTP Engine | `max_retries=3`, `timeout=15s`, HTTPS→HTTP auto-fallback on SSL error, live status/retry feedback via Rich |
-| **MOD-2** | Port Scanner + Nmap | `top1000` port group; `--nmap` flag runs `nmap -sV -Pn`, parses XML into Vulpimancer table |
-| **MOD-3** | TLS/SSL Handler | SSLError → SNI retry; `--tls-legacy` enables TLS 1.0/1.1 for older servers |
-| **MOD-4** | CVE Discovery (Nuclei) | `--nuclei` runs Nuclei via subprocess, filters Critical + High from JSONL, zero crash policy |
-| **MOD-5** | Recon Module | `--recon` launches subfinder + amass in parallel daemon threads, merges + deduplicates, saves `.txt` |
+When you point it at a target, it works through the following stages automatically:
+
+- 🌐 Finds subdomains using crt.sh, DNS brute-force, Subfinder, and Amass
+- 🔗 Resolves each subdomain and checks for potential takeover opportunities
+- 🔌 Scans ports using async TCP and optionally enriches results with Nmap version detection
+- 📡 Probes HTTP and HTTPS endpoints with automatic retry and fallback logic
+- 🔒 Analyses TLS certificates — expiry dates, cipher suites, legacy protocol support
+- 🧬 Fingerprints the technology stack using 60+ header and response body signatures
+- 📂 Checks for exposed sensitive paths using baseline comparison
+- 🛡️ Looks up known CVEs via the NIST NVD API and runs Nuclei for Critical and High severity findings
+- 📊 Saves everything to SQLite, JSON, and a dark-theme HTML report
 
 ---
 
-## 📦 Installation
+## ⚙️ Installation
+
+**Step 1 — Get the code**
 
 ```bash
-cd vulpimancer_v1
+git clone https://github.com/abhishekzalavadiya/vulpimancer.git
+cd vulpimancer
+```
+
+**Step 2 — Create a virtual environment**
+
+This keeps Vulpimancer's dependencies separate from your system Python. It is good practice and avoids version conflicts.
+
+```bash
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate        # On Windows: venv\Scripts\activate
+```
+
+**Step 3 — Install dependencies**
+
+```bash
 pip install -r requirements.txt
 pip install -e .
-
-# External tools (optional but recommended)
-# nmap:       https://nmap.org/download.html
-# nuclei:     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-# subfinder:  go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-# amass:      go install github.com/owasp-amass/amass/v4/...@master
 ```
+
+Once this is done, the `vulpimancer` command will be available in your terminal.
+
+**Step 4 — Install external tools (optional)**
+
+These tools are not required to run Vulpimancer, but they unlock additional modules. If any of them are missing, Vulpimancer will print a warning and continue without them.
+
+| Tool | Used for | How to install |
+|------|----------|----------------|
+| Nmap | Port version detection (MOD-2) | [nmap.org/download.html](https://nmap.org/download.html) |
+| Nuclei | CVE discovery (MOD-4) | `go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest` |
+| Subfinder | Subdomain enumeration (MOD-5) | `go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest` |
+| Amass | Subdomain enumeration (MOD-5) | `go install github.com/owasp-amass/amass/v4/...@master` |
+
+> 💡 Nuclei, Subfinder, and Amass require Go to be installed. You can get it from [go.dev/dl](https://go.dev/dl).
 
 ---
 
 ## 🚀 Usage
 
+**Basic scan — good starting point**
+
 ```bash
-# Basic scan
 vulpimancer --target example.com
+```
 
-# Full v5 scan — all 5 modules
+This runs all the core phases: subdomain discovery, DNS resolution, port scanning, HTTP probing, TLS analysis, tech fingerprinting, path detection, and CVE lookup.
+
+---
+
+**Full scan — all five modules enabled**
+
+```bash
 vulpimancer --target example.com \
-      --subdomains \
-      --recon \
-      --nmap \
-      --nuclei \
-      --ports top1000
+    --subdomains \
+    --recon \
+    --nmap \
+    --nuclei \
+    --ports top1000
+```
 
-# Top-1000 ports (MOD-2)
-vulpimancer --target example.com --ports top1000
+This is the most complete scan. It adds Nmap version detection, Nuclei CVE scanning, and parallel Subfinder/Amass recon on top of the core phases.
 
-# With Nmap version detection (MOD-2)
-vulpimancer --target example.com --nmap
+---
 
-# Legacy TLS support (MOD-3)
+**Common scan types**
+
+Scan the top 1000 ports with Nmap version detection:
+```bash
+vulpimancer --target example.com --ports top1000 --nmap
+```
+
+Test a server that uses old TLS versions:
+```bash
 vulpimancer --target example.com --tls-legacy
+```
 
-# With Nuclei CVE discovery (MOD-4) 
+Run Nuclei with a longer timeout (useful for large targets):
+```bash
 vulpimancer --target example.com --nuclei --nuclei-timeout 180
+```
 
-# Threaded amass + subfinder recon (MOD-5)
+Enumerate subdomains using Subfinder and Amass:
+```bash
 vulpimancer --target example.com --subdomains --recon
+```
 
-# Multi-target from file
+Scan multiple targets from a file:
+```bash
 vulpimancer --hosts targets/hosts.txt --subdomains --recon --nmap
+```
 
-# Skip CVE + paths (faster)
+Faster scan — skip CVE lookup and path probing:
+```bash
 vulpimancer --target example.com --no-cve --no-paths
+```
 
-# Debug log
+Save a debug log for troubleshooting:
+```bash
 vulpimancer --target example.com --log-file logs/scan.log --debug
 ```
 
 ---
 
-## 📊 Scan Phases
+## 🏳️ All CLI Flags
 
-| Phase | Description |
-|-------|-------------|
-| 0 | Subdomain enum — crt.sh + DNS brute-force + **amass/subfinder (MOD-5)** |
-| 1 | DNS resolution — aiodns + stdlib fallback, CNAME extraction, takeover hints |
-| 2 | Port scan — async TCP double-verify + **nmap -sV -Pn (MOD-2)** |
-| 4 | HTTP probe — **MOD-1 retry engine**, live feedback, HTTPS→HTTP fallback |
-| 5 | TLS analysis — **MOD-3 SNI retry**, legacy TLS compat, expiry + cipher |
-| 6 | Tech fingerprinting — 60+ signatures, headers + body |
-| 7 | Sensitive path probe — baseline comparison, confidence scoring |
-| 8 | CVE — NIST NVD API v2 + **Nuclei Critical/High (MOD-4)** |
-| 9 | Reports — SQLite + HTML + JSON |
+| Flag | Description |
+|------|-------------|
+| `--target <domain>` | Single target domain |
+| `--hosts <file>` | Read multiple targets from a file |
+| `--subdomains` | Enable subdomain enumeration |
+| `--recon` | Run Subfinder and Amass in parallel threads |
+| `--ports top1000` | Scan Nmap's top 1000 ports |
+| `--nmap` | Run `nmap -sV -Pn` and merge results |
+| `--tls-legacy` | Allow TLS 1.0 and 1.1 connections |
+| `--nuclei` | Run Nuclei and show Critical and High findings only |
+| `--nuclei-timeout N` | Set Nuclei timeout in seconds (default: 120) |
+| `--no-cve` | Skip the CVE discovery phase |
+| `--no-paths` | Skip the sensitive path probe |
+| `--log-file <path>` | Path to write the log file |
+| `--debug` | Enable verbose debug output |
 
 ---
 
-## 🏗️ Architecture (v1 modules)
+## 📤 Output Files
+
+After a scan, you will find these files in your working directory:
+
+| File | What it contains |
+|------|-----------------|
+| `vulpimancer_results.db` | SQLite database with all raw scan data |
+| `vulpimancer_results_report.html` | Dark-theme HTML report — open in any browser |
+| `vulpimancer_results_report.json` | Full JSON output for scripting or further analysis |
+| `vulpimancer_recon_<domain>_<timestamp>.txt` | Subdomain list from Subfinder and Amass |
+| `logs/scan.log` | Rotating JSON log with errors and debug events |
+
+> 💡 The HTML report is the easiest way to review results. Open it in your browser after the scan completes.
+
+---
+
+## 🛡️ Error Handling
+
+Vulpimancer is designed to never crash mid-scan. Every error is caught, logged, and the scan continues. Specifically:
+
+- If Nmap, Nuclei, Subfinder, or Amass is not installed — it prints a warning and skips that module
+- If an SSL handshake fails — it retries with SNI, then falls back to HTTP
+- If a subprocess times out — it is logged and skipped
+- If a network request fails — it retries up to the `--retries` limit
+
+All errors are written to `logs/scan.log` in JSON format so you can review them after the scan.
+
+---
+
+## 🗂️ Project Structure
 
 ```
-vulpimancer_v1/
+vulpimancer/
 ├── vulpimancer/
 │   ├── __init__.py
 │   ├── __main__.py
-│   └── core.py                    ← All 5 modules integrated
-│        ├── robust_get()          MOD-1: retry + HTTPS→HTTP fallback
-│        ├── run_nmap()            MOD-2: nmap -sV -Pn XML parser
-│        ├── analyse_tls()         MOD-3: SNI retry + legacy TLS
-│        ├── run_nuclei()          MOD-4: subprocess + Critical/High JSONL filter
-│        ├── threaded_recon()      MOD-5: parallel subfinder+amass threads
-│        ├── _merge_dedup_subdomains() MOD-5: dedup helper
-│        └── enumerate_subdomains()   integrates all recon sources
-├── targets/hosts.txt
-├── reports/                       ← HTML/JSON outputs
-├── logs/                          ← Silent JSON rotating logs
+│   └── core.py          # All logic lives here
+├── targets/
+│   └── hosts.txt        # Example multi-target file
+├── reports/             # HTML and JSON output
+├── logs/                # Log files
+├── tests/
 ├── requirements.txt
 ├── setup.py
 └── README.md
@@ -122,35 +201,12 @@ vulpimancer_v1/
 
 ---
 
-## 🔧 New CLI Flags
+## 👤 Author
 
-| Flag | Module | Description |
-|------|--------|-------------|
-| `--ports top1000` | MOD-2 | Scan nmap's top-1000 default port list |
-| `--nmap` | MOD-2 | Run `nmap -sV -Pn` after TCP scan, enrich results |
-| `--tls-legacy` | MOD-3 | Allow TLS 1.0/1.1 for older servers |
-| `--recon` | MOD-5 | Launch subfinder + amass in parallel threads |
-| `--nuclei` | MOD-4 | Run Nuclei, show only Critical + High |
-| `--nuclei-timeout N` | MOD-4 | Nuclei subprocess timeout (default: 120s) |
+Built by **Abhishek Zalavadiya**.
 
 ---
 
-## 📤 Output
+## ⚖️ Legal
 
-| File | Description |
-|------|-------------|
-| `vulpimancer_results.db` | SQLite — all raw data incl. nuclei_results table |
-| `vulpimancer_results_report.html` | Dark-theme HTML report with Nuclei section |
-| `vulpimancer_results_report.json` | JSON summary with v1 metadata |
-| `vulpimancer_recon_<domain>_<ts>.txt` | MOD-5: merged subfinder+amass subdomain list |
-| `logs/scan.log` | Silent JSON rotating log (errors, debug) |
-
----
-
-## 🧪 Silent Error Policy
-
-All errors are logged to the JSON log file. The CLI never crashes on:
-- Missing tools (nmap/nuclei/subfinder/amass) — warns and continues
-- SSL errors — retries with SNI, then falls back to HTTP
-- Subprocess timeouts — logged, tool skipped gracefully
-- Network errors — retried up to `--retries` times
+This tool is for authorised security assessments only. Do not run it against systems without explicit written permission. Unauthorised use is illegal under the CFAA, Computer Misuse Act, India's IT Act, and similar laws in most countries.
