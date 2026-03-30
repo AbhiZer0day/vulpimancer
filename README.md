@@ -8,19 +8,19 @@ It handles subdomain discovery, port scanning, TLS inspection, technology finger
 
 ---
 
-## 🔍 What Vulpimancer Does
+##  What Vulpimancer Does
 
 When you point it at a target, it works through the following stages automatically:
 
-- 🌐 Finds subdomains using crt.sh, DNS brute-force, Subfinder, and Amass
-- 🔗 Resolves each subdomain and checks for potential takeover opportunities
-- 🔌 Scans ports using async TCP and optionally enriches results with Nmap version detection
-- 📡 Probes HTTP and HTTPS endpoints with automatic retry and fallback logic
-- 🔒 Analyses TLS certificates — expiry dates, cipher suites, legacy protocol support
-- 🧬 Fingerprints the technology stack using 60+ header and response body signatures
-- 📂 Checks for exposed sensitive paths using baseline comparison
-- 🛡️ Looks up known CVEs via the NIST NVD API and runs Nuclei for Critical and High severity findings
-- 📊 Saves everything to SQLite, JSON, and a dark-theme HTML report
+-  Finds subdomains using crt.sh, DNS brute-force, Subfinder, and Amass
+-  Resolves each subdomain and checks for potential takeover opportunities
+-  Scans ports using async TCP and optionally enriches results with Nmap version detection
+-  Probes HTTP and HTTPS endpoints with automatic retry and fallback logic
+-  Analyses TLS certificates — expiry dates, cipher suites, legacy protocol support
+-  Fingerprints the technology stack using 60+ header and response body signatures
+-  Checks for exposed sensitive paths using baseline comparison
+-  Looks up known CVEs via the NIST NVD API and runs Nuclei for Critical and High severity findings
+-  Saves everything to SQLite, JSON, and a dark-theme HTML report
 
 ---
 
@@ -62,11 +62,11 @@ These tools are not required to run Vulpimancer, but they unlock additional modu
 | Subfinder | Subdomain enumeration (MOD-5) | `go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest` |
 | Amass | Subdomain enumeration (MOD-5) | `go install github.com/owasp-amass/amass/v4/...@master` |
 
-> 💡 Nuclei, Subfinder, and Amass require Go to be installed. You can get it from [go.dev/dl](https://go.dev/dl).
+>  Nuclei, Subfinder, and Amass require Go to be installed. You can get it from [go.dev/dl](https://go.dev/dl).
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 **Basic scan — good starting point**
 
@@ -164,11 +164,11 @@ After a scan, you will find these files in your working directory:
 | `vulpimancer_recon_<domain>_<timestamp>.txt` | Subdomain list from Subfinder and Amass |
 | `logs/scan.log` | Rotating JSON log with errors and debug events |
 
-> 💡 The HTML report is the easiest way to review results. Open it in your browser after the scan completes.
+>  The HTML report is the easiest way to review results. Open it in your browser after the scan completes.
 
 ---
 
-## 🛡️ Error Handling
+##  Error Handling
 
 Vulpimancer is designed to never crash mid-scan. Every error is caught, logged, and the scan continues. Specifically:
 
